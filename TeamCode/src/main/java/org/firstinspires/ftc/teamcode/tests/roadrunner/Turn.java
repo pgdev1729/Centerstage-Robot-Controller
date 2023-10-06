@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.tests.roadrunner.headingprimitives;
+package org.firstinspires.ftc.teamcode.tests.roadrunner;
 
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -6,7 +6,7 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
-public final class LinearHeading extends LinearOpMode{
+public final class Turn extends LinearOpMode{
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -16,8 +16,8 @@ public final class LinearHeading extends LinearOpMode{
 
         Actions.runBlocking(
                 drive.actionBuilder(drive.pose)
-                        .setTangent(0)
-                        .splineToLinearHeading(new Pose2d(48, 48, 0), Math.PI / 2)
+                        .splineTo(new Vector2d(48, 48), Math.PI / 2)
+                        .turn(45)
                         .build());
     }
 }
