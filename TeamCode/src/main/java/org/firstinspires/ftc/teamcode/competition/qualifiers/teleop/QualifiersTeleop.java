@@ -55,15 +55,15 @@ public class QualifiersTeleop extends LinearOpMode {
                 }
             }
 
-            if (gamepad2.dpad_left){
+            if (gamepad1.dpad_left){
                 pixelsPossesed = 1;
             }
 
-            if (gamepad2.dpad_right){
+            if (gamepad1.dpad_right){
                 pixelsPossesed = 2;
             }
 
-            if (gamepad2.dpad_up){
+            if (gamepad1.dpad_up){
                 pixelsPossesed = 0;
             }
 
