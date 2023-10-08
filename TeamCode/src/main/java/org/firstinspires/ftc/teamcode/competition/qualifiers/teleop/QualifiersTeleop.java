@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 public class QualifiersTeleop extends LinearOpMode {
@@ -13,6 +14,11 @@ public class QualifiersTeleop extends LinearOpMode {
     int slideLevelThree = 0;
 
     int slideLevelGround = 0;
+
+    float slideKi = 0;
+    float slideKp = 0;
+    float slideKd = 0;
+    float slideReference = 0;
 
     DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
     DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
@@ -44,9 +50,6 @@ public class QualifiersTeleop extends LinearOpMode {
             double rx = gamepad1.right_stick_x;
 
             if (pixelsPossesed <= 2){
-                if (gamepad1.left_trigger > 0){
-                    intakeMotor.setPower(-gamepad1.left_trigger);
-                }
                 if (gamepad1.right_trigger > 0){
                     intakeMotor.setPower(gamepad1.right_trigger);
                 }
@@ -98,25 +101,100 @@ public class QualifiersTeleop extends LinearOpMode {
         }
     }
 
-    public void moveToPositionPID(DcMotor motor, int currentTicks, int positionTicks){
-        // i will write this function later
+    public void moveSlideToPositionPID(DcMotor leftSlideMotor, DcMotor rightSlideMotor, float ticks, float Kp, float Ki, float Kd, float reference){
+
+        double integralSum = 0;
+
+        float lastError = 0;
+
+// Elapsed timer class from SDK, please use it, it's epic
+        ElapsedTime timer = new ElapsedTime();
+
+        while (leftSlideMotor.getCurrentPosition() != ticks) {
+
+
+            // obtain the encoder position
+            float encoderPosition = leftSlideMotor.getCurrentPosition();
+            // calculate the error
+            float error = reference - encoderPosition;
+
+            // rate of change of the error
+            float derivative = (float) ((error - lastError) / timer.seconds());
+
+            // sum of all error over time
+            integralSum = integralSum + (error * timer.seconds());
+
+            double out = (Kp * error) + (Ki * integralSum) + (Kd * derivative);
+
+            leftSlideMotor.setPower(out);
+            rightSlideMotor.setPower(out);
+
+            lastError = error;
+
+            // reset the timer for next time
+            timer.reset();
+
+            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+            double rx = gamepad1.right_stick_x;
+
+            if (pixelsPossesed <= 2){
+                if (gamepad1.left_trigger > 0){
+                    intakeMotor.setPower(-gamepad1.left_trigger);
+                }
+                if (gamepad1.right_trigger > 0){
+                    intakeMotor.setPower(gamepad1.right_trigger);
+                }
+            }
+
+            if (gamepad1.dpad_left){
+                pixelsPossesed = 1;
+            }
+
+            if (gamepad1.dpad_right){
+                pixelsPossesed = 2;
+            }
+
+            if (gamepad1.dpad_up){
+                pixelsPossesed = 0;
+            }
+
+            if (gamepad2.dpad_up){
+                break;
+            }
+
+
+
+
+
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+
+            double frontLeftPower = (y + x + rx) / denominator;
+            double backLeftPower = (y - x + rx) / denominator;
+            double frontRightPower = (y - x - rx) / denominator;
+            double backRightPower = (y + x - rx) / denominator;
+
+            frontLeftMotor.setPower(frontLeftPower);
+            backLeftMotor.setPower(backLeftPower);
+            frontRightMotor.setPower(frontRightPower);
+            backRightMotor.setPower(backRightPower);
+
+        }
+
+
     }
 
     public void moveSlideToLevelOne(){
-        moveToPositionPID(leftSlideMotor, leftSlideMotorTicks, slideLevelOne);
-        moveToPositionPID(rightSlideMotor, rightSlideMotorTicks, slideLevelOne);
+        moveSlideToPositionPID(leftSlideMotor, rightSlideMotor, slideLevelOne, slideKp, slideKi, slideKd, slideReference);
     }
     public void moveSlideToLevelTwo(){
-        moveToPositionPID(leftSlideMotor, leftSlideMotorTicks, slideLevelTwo);
-        moveToPositionPID(rightSlideMotor, rightSlideMotorTicks, slideLevelTwo);
+        moveSlideToPositionPID(leftSlideMotor, rightSlideMotor, slideLevelTwo, slideKp, slideKi, slideKd, slideReference);
     }
     public void moveSlideToLevelThree(){
-        moveToPositionPID(leftSlideMotor, leftSlideMotorTicks, slideLevelTwo);
-        moveToPositionPID(rightSlideMotor, rightSlideMotorTicks, slideLevelTwo);
+        moveSlideToPositionPID(leftSlideMotor, rightSlideMotor, slideLevelThree, slideKp, slideKi, slideKd, slideReference);
     }
 
     public void moveSlideToGround(){
-        moveToPositionPID(leftSlideMotor, leftSlideMotorTicks, slideLevelGround);
-        moveToPositionPID(rightSlideMotor, rightSlideMotorTicks, slideLevelGround);
+        moveSlideToPositionPID(leftSlideMotor, rightSlideMotor, slideLevelGround, slideKp, slideKi, slideKd, slideReference);
     }
 }
