@@ -102,26 +102,16 @@ public class QualifiersTeleop extends LinearOpMode {
     }
 
     public void moveSlideToPositionPID(DcMotor leftSlideMotor, DcMotor rightSlideMotor, float ticks, float Kp, float Ki, float Kd, float reference){
-
         double integralSum = 0;
-
         float lastError = 0;
 
-// Elapsed timer class from SDK, please use it, it's epic
         ElapsedTime timer = new ElapsedTime();
 
         while (leftSlideMotor.getCurrentPosition() != ticks) {
-
-
-            // obtain the encoder position
             float encoderPosition = leftSlideMotor.getCurrentPosition();
-            // calculate the error
             float error = reference - encoderPosition;
-
-            // rate of change of the error
             float derivative = (float) ((error - lastError) / timer.seconds());
 
-            // sum of all error over time
             integralSum = integralSum + (error * timer.seconds());
 
             double out = (Kp * error) + (Ki * integralSum) + (Kd * derivative);
@@ -131,11 +121,10 @@ public class QualifiersTeleop extends LinearOpMode {
 
             lastError = error;
 
-            // reset the timer for next time
             timer.reset();
 
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x * 1.1;
             double rx = gamepad1.right_stick_x;
 
             if (pixelsPossesed <= 2){
